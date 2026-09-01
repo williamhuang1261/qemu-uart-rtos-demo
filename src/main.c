@@ -1,22 +1,51 @@
 #include <stdint.h>
+
+#include "FreeRTOS.h"
+#include "task.h"
+
 #include "uart.h"
 
-static void busy_delay(volatile uint32_t count)
+static void heartbeat_task(void *pvParameters)
 {
-    while (count--) {
-        __asm__ volatile("nop");
+    (void)pvParameters;
+    uint32_t beat = 0;
+
+    for (;;) {
+        uart_puts("heartbeat tick\n");
+        (void)beat++;
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
 
 int main(void)
 {
     uart_init();
-    uart_puts("Hello from bare-metal Cortex-M3 on QEMU (mps2-an385)!\n");
+    uart_puts("Hello from FreeRTOS on QEMU (mps2-an385)!\n");
 
-    unsigned tick = 0;
+    xTaskCreate(heartbeat_task, "heartbeat", configMINIMAL_STACK_SIZE, NULL,
+                tskIDLE_PRIORITY + 1, NULL);
+
+    vTaskStartScheduler();
+
+    /* vTaskStartScheduler() only returns if there was not enough heap to
+     * create the idle task, which would be a configuration bug. */
+    uart_puts("FATAL: scheduler returned\n");
     for (;;) {
-        uart_puts("heartbeat\n");
-        (void)tick++;
-        busy_delay(2000000);
+    }
+}
+
+void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
+{
+    (void)xTask;
+    (void)pcTaskName;
+    uart_puts("FATAL: stack overflow\n");
+    for (;;) {
+    }
+}
+
+void vApplicationMallocFailedHook(void)
+{
+    uart_puts("FATAL: malloc failed\n");
+    for (;;) {
     }
 }
