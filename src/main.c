@@ -1,29 +1,15 @@
-#include <stdint.h>
-
 #include "FreeRTOS.h"
 #include "task.h"
 
+#include "tasks_app.h"
 #include "uart.h"
-
-static void heartbeat_task(void *pvParameters)
-{
-    (void)pvParameters;
-    uint32_t beat = 0;
-
-    for (;;) {
-        uart_puts("heartbeat tick\n");
-        (void)beat++;
-        vTaskDelay(pdMS_TO_TICKS(500));
-    }
-}
 
 int main(void)
 {
     uart_init();
     uart_puts("Hello from FreeRTOS on QEMU (mps2-an385)!\n");
 
-    xTaskCreate(heartbeat_task, "heartbeat", configMINIMAL_STACK_SIZE, NULL,
-                tskIDLE_PRIORITY + 1, NULL);
+    app_tasks_create();
 
     vTaskStartScheduler();
 

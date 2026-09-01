@@ -23,6 +23,7 @@ BUILD := build
 SRCS  := startup/startup_mps2an385.c \
          src/uart.c \
          src/libc_stubs.c \
+         src/tasks_app.c \
          src/main.c \
          $(FREERTOS)/tasks.c \
          $(FREERTOS)/list.c \
