@@ -1,0 +1,55 @@
+This is a real, unedited transcript captured with:
+  1. qemu-system-arm -M mps2-an385 -kernel build/firmware.elf -nographic -serial mon:stdio -s -S
+  2. arm-none-eabi-gdb -q build/firmware.elf -x scripts/gdb_session.gdb
+against the firmware built at the time of Step 5 in the project plan. A
+breakpoint on protocol_decode() is hit twice (once for a good A frame, once
+for a good B frame); frame_len, the start byte and length byte are printed,
+a backtrace is taken (GDB can only unwind one caller deep here because -O2
+optimizes consumer_task's frame pointer away - a real, expected limitation
+of debugging optimized firmware, not a tool failure), and `finish` shows
+the real PROTOCOL_OK return value both times.
+
+Reading symbols from build/firmware.elf...
+Reset_Handler () at startup/startup_mps2an385.c:65
+65	    while (dst < &_edata) {
+Breakpoint 1 at 0x160: file src/protocol.c, line 35.
+
+Breakpoint 1, protocol_decode (
+    frame=frame@entry=0x20000864 <ucHeap+1872> "~\005A", frame_len=8, 
+    payload_out=payload_out@entry=0x20000854 <ucHeap+1856> '\245' <repeats 16 times>, "~\005A", 
+    payload_len_out=payload_len_out@entry=0x20000847 <ucHeap+1843> '\245' <repeats 29 times>, "~\005A") at src/protocol.c:35
+35	    if (frame_len < 3u) {
+$1 = 8
+$2 = 0x7e
+$3 = 5 '\005'
+#0  protocol_decode (frame=frame@entry=0x20000864 <ucHeap+1872> "~\005A", 
+    frame_len=8, 
+    payload_out=payload_out@entry=0x20000854 <ucHeap+1856> '\245' <repeats 16 times>, "~\005A", 
+    payload_len_out=payload_len_out@entry=0x20000847 <ucHeap+1843> '\245' <repeats 29 times>, "~\005A") at src/protocol.c:35
+#1  0x000001f2 in consumer_task (pvParameters=<optimized out>)
+    at src/tasks_app.c:102
+#2  0x000017c4 in PendSV_Handler ()
+    at third_party/FreeRTOS-Kernel/portable/GCC/ARM_CM3/port.c:459
+Backtrace stopped: previous frame identical to this frame (corrupt stack?)
+consumer_task (pvParameters=<optimized out>) at src/tasks_app.c:105
+105	        if (status == PROTOCOL_OK) {
+Value returned is $4 = PROTOCOL_OK
+
+Breakpoint 1, protocol_decode (
+    frame=frame@entry=0x20000864 <ucHeap+1872> "~\005B", frame_len=8, 
+    payload_out=payload_out@entry=0x20000854 <ucHeap+1856> "A", 
+    payload_len_out=payload_len_out@entry=0x20000847 <ucHeap+1843> "\005", '\245' <repeats 12 times>, "A") at src/protocol.c:35
+35	    if (frame_len < 3u) {
+$5 = 8
+#0  protocol_decode (frame=frame@entry=0x20000864 <ucHeap+1872> "~\005B", 
+    frame_len=8, payload_out=payload_out@entry=0x20000854 <ucHeap+1856> "A", 
+    payload_len_out=payload_len_out@entry=0x20000847 <ucHeap+1843> "\005", '\245' <repeats 12 times>, "A") at src/protocol.c:35
+#1  0x000001f2 in consumer_task (pvParameters=<optimized out>)
+    at src/tasks_app.c:102
+#2  0x000017c4 in PendSV_Handler ()
+    at third_party/FreeRTOS-Kernel/portable/GCC/ARM_CM3/port.c:459
+Backtrace stopped: previous frame identical to this frame (corrupt stack?)
+consumer_task (pvParameters=<optimized out>) at src/tasks_app.c:105
+105	        if (status == PROTOCOL_OK) {
+Value returned is $6 = PROTOCOL_OK
+[Inferior 1 (process 1) detached]
