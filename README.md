@@ -1,5 +1,7 @@
 # qemu-uart-rtos-demo
 
+[![CI](https://github.com/williamhuang1261/qemu-uart-rtos-demo/actions/workflows/ci.yml/badge.svg)](https://github.com/williamhuang1261/qemu-uart-rtos-demo/actions/workflows/ci.yml)
+
 RTOS firmware for an emulated ARM Cortex-M3 board, built and debugged with
 an entirely open-source toolchain: no vendor IDE, no physical hardware, no
 paid tools.
@@ -98,9 +100,14 @@ one that gets rejected — proof the checksum path actually runs both ways.
 bash scripts/run_qemu_test.sh
 ```
 
-Boots QEMU headless for 4 seconds and checks the captured serial output for
+Boots QEMU headless for 6 seconds and checks the captured serial output for
 the boot banner, accepted frames from both producers, and the rejected
 checksum line. Prints `PASS: ...` and exits 0 on success.
+
+This same script runs on every push via
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml): a GitHub Actions job
+installs `gcc-arm-none-eabi` and `qemu-system-arm` from `apt`, builds the
+firmware, and fails if the smoke test does.
 
 ### Debugging with GDB
 
