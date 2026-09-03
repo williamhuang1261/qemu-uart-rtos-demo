@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository (with FreeRTOS-Kernel submodule)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install arm-none-eabi-gcc and qemu-system-arm
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi qemu-system-arm
+
+      - name: Build firmware
+        run: make
+
+      - name: Run headless QEMU smoke test
+        run: bash scripts/run_qemu_test.sh

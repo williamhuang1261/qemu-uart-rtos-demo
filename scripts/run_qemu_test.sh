@@ -9,7 +9,10 @@ set -u
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ELF="$ROOT_DIR/build/firmware.elf"
-CAPTURE_SECONDS="${CAPTURE_SECONDS:-4}"
+# Producer B corrupts every 5th frame (seq=4, 700ms period), so the first
+# corrupted frame lands around 3.5s in; 6s leaves real margin instead of
+# racing the capture window against it.
+CAPTURE_SECONDS="${CAPTURE_SECONDS:-6}"
 LOG_FILE="$(mktemp -t qemu_test_XXXXXX.log)"
 
 if [ ! -f "$ELF" ]; then
